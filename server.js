@@ -4,9 +4,12 @@ const express = require("express");
 const multer  = require("multer");
 const path = require("path");
 const fs = require("fs");
+const cors = require("cors");
 
-// Initialize the Express app
 const app = express();
+
+// Enable CORS for all origins (or restrict later if needed)
+app.use(cors());
 
 // Set up the uploads directory (creates 'uploads' if it doesn't exist)
 const uploadDir = path.join(__dirname, "uploads");
