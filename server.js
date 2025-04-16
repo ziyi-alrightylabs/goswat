@@ -46,7 +46,6 @@ const upload = multer({
 // Additionally, other non-file fields (like latitude, longitude, mobile, project, stop) can be passed.
 app.post(
   "/api/submitDelivery",
-  // Use multer.fields to handle multiple file fields
   upload.fields([
     { name: "photo1", maxCount: 1 },
     { name: "photo2", maxCount: 1 },
@@ -55,40 +54,39 @@ app.post(
   ]),
   (req, res) => {
     try {
-      // Extract non-file form fields
       const fields = req.body;
-      // Extract the files (if present)
-      const files = req.files;
-      let photos = [];
-      if (files) {
-        if (files.photo1) photos.push(files.photo1[0]);
-        if (files.photo2) photos.push(files.photo2[0]);
-        if (files.photo3) photos.push(files.photo3[0]);
-      }
-      const signature = files && files.signature ? files.signature[0] : null;
+      const files = req.files || {};
 
-      // Log the submission data to the console
-      console.log("Delivery submission received:");
-      console.log("Fields:", fields);
-      console.log("Photos:", photos);
-      console.log("Signature:", signature);
+      // Safely access photos if they exist
+      const photos = ["photo1", "photo2", "photo3"]
+        .filter((key) => files[key])
+        .map((key) => files[key][0]); // Each is an array of 1 file
 
-      // Return a JSON response showing what was received
+      // Safely access signature
+      const signature = files.signature ? files.signature[0] : null;
+
+      console.log("Received fields:", fields);
+      console.log("Received photos:", photos.map(f => f.originalname));
+      if (signature) console.log("Received signature:", signature.originalname);
+
       res.json({
         message: "Delivery submission received successfully.",
         data: {
           fields,
-          photos: photos.map(file => ({
+          photos: photos.map((file) => ({
             originalName: file.originalname,
-            storedPath: file.path
+            storedPath: file.path,
           })),
           signature: signature
-            ? { originalName: signature.originalname, storedPath: signature.path }
-            : null
-        }
+            ? {
+                originalName: signature.originalname,
+                storedPath: signature.path,
+              }
+            : null,
+        },
       });
     } catch (err) {
-      console.error("Error processing submission:", err);
+      console.error("Error handling upload:", err);
       res.status(500).json({ error: "Server error: " + err.message });
     }
   }
