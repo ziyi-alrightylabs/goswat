@@ -70,21 +70,19 @@ app.post(
       if (signature) console.log("Received signature:", signature.originalname);
 
       res.json({
-        message: "Delivery submission received successfully.",
-        data: {
-          fields,
-          photos: photos.map((file) => ({
-            originalName: file.originalname,
-            storedPath: file.path,
-          })),
-          signature: signature
-            ? {
-                originalName: signature.originalname,
-                storedPath: signature.path,
-              }
-            : null,
-        },
-      });
+  message: "Delivery submission received successfully.",
+  data: {
+    fields,
+    photos: photos.map(file => ({
+      originalName: file.originalname,
+      storedPath: file.path
+    })),
+    signature: signature ? {
+      originalName: signature.originalname,
+      storedPath: signature.path
+    } : null
+  }
+});
     } catch (err) {
       console.error("Error handling upload:", err);
       res.status(500).json({ error: "Server error: " + err.message });
