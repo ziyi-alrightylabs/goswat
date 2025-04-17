@@ -53,7 +53,7 @@ app.post(
   ]),
   (req, res) => {
     try {
-      console.log("Request received at /api/submitDelivery");
+      console.log("🟢 Request received at /api/submitDelivery -", timestamp);
 
       const fields = req.body;
       const files = req.files || {};
