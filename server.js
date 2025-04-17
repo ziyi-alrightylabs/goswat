@@ -69,6 +69,8 @@ app.post(
       console.log("Photos received:", photos.map(f => f.originalname));
       if (signature) {
         console.log("Signature received:", signature.originalname);
+      } else {
+        console.warn("⚠️ No signature received");
       }
 
       res.json({
@@ -79,10 +81,12 @@ app.post(
             originalName: file.originalname,
             storedPath: file.path
           })),
-          signature: signature ? {
-            originalName: signature.originalname,
-            storedPath: signature.path
-          } : null
+          signature: signature
+            ? {
+                originalName: signature.originalname,
+                storedPath: signature.path
+              }
+            : null
         }
       });
     } catch (err) {
