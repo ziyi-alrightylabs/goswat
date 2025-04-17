@@ -9,7 +9,11 @@ const cors = require("cors");
 const app = express();
 
 // Enable CORS for all origins (or restrict later if needed)
-app.use(cors());
+app.use(cors({
+  origin: "*", // OR replace with specific allowed origin like 'https://ziyi-alrightylabs.github.io'
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
 
 // Set up the uploads directory (creates 'uploads' if it doesn't exist)
 const uploadDir = path.join(__dirname, "uploads");
