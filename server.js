@@ -66,8 +66,8 @@ app.post(
 
       // Safely access photos if they exist
       const photos = ["photo1", "photo2", "photo3"]
-        .filter((key) => files[key])
-        .map((key) => files[key][0]); // Each is an array of 1 file
+        .map((key) => files[key]?.[0])
+        .filter(Boolean); // keep only existing files
 
       // Safely access signature
       const signature = files.signature ? files.signature[0] : null;
@@ -75,7 +75,7 @@ app.post(
       console.log("Received fields:", fields);
       console.log("Received photos:", photos.map(f => f.originalname));
       if (signature) console.log("Received signature:", signature.originalname);
-
+      console.log("Preparing to send response...");
       res.json({
   message: "Delivery submission received successfully.",
   data: {
