@@ -1,56 +1,49 @@
-// server.js
 
 const express = require("express");
-const multer  = require("multer");
+const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
 
-// Enable CORS for all origins (or restrict later if needed)
+// Enable CORS for all origins
 app.use(cors({
-  origin: "*", // OR replace with specific allowed origin like 'https://ziyi-alrightylabs.github.io'
+  origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
 
-// Set up the uploads directory (creates 'uploads' if it doesn't exist)
+// Set up the uploads directory
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Configure Multer storage to save files to disk
+// Configure Multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Prepend a timestamp to avoid name collisions
-    const uniqueName = `${Date.now()}-${file.originalname}`;
+    const uniqueName = \`\${Date.now()}-\${file.originalname}\`;
     cb(null, uniqueName);
   }
 });
 
-// Optionally, you can filter by file type (only images allowed)
+// Updated fileFilter with logging
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed!"), false);
+    console.warn(\`⛔ Rejected file: \${file.originalname} — MIME: \${file.mimetype}\`);
+    cb(null, false); // Skip the file silently
   }
 };
 
-// Create an instance of multer with the defined storage and filter
-const upload = multer({
-  storage,
-  fileFilter
-});
+const upload = multer({ storage, fileFilter });
 
-// Our endpoint to handle the POST submission
-// We expect fields: photo1, photo2, photo3 for photos and signature for signature.
-// Additionally, other non-file fields (like latitude, longitude, mobile, project, stop) can be passed.
+// Handle POST submissions
 app.post(
   "/api/submitDelivery",
   upload.fields([
@@ -61,29 +54,34 @@ app.post(
   ]),
   (req, res) => {
     try {
+      console.log("🟢 Request received at /api/submitDelivery");
+
       const fields = req.body;
       const files = req.files || {};
 
-      // Safely access photos if they exist
+      console.log("📦 Fields:", fields);
+      console.log("📂 Files received:", Object.keys(files));
+
       const photos = ["photo1", "photo2", "photo3"]
         .map((key) => files[key]?.[0])
-        .filter(Boolean); // keep only existing files
+        .filter(Boolean);
 
-      // Safely access signature
       const signature = files.signature ? files.signature[0] : null;
 
-      console.log("Received fields:", fields);
-      console.log("Received photos:", photos.map(f => f.originalname));
-      if (signature) console.log("Received signature:", signature.originalname);
-      console.log("Preparing to send response...");
+      console.log("📸 Photos:", photos.map(f => f.originalname));
+      if (signature) {
+        console.log("✍️ Signature received:", signature.originalname);
+      }
+
+      console.log("✔ Preparing JSON response...");
       res.json({
         message: "Delivery submission received successfully.",
         data: {
           fields,
-          photos: photos.length ? photos.map(file => ({
+          photos: photos.map(file => ({
             originalName: file.originalname,
             storedPath: file.path
-          })) : [],
+          })),
           signature: signature ? {
             originalName: signature.originalname,
             storedPath: signature.path
@@ -91,19 +89,19 @@ app.post(
         }
       });
     } catch (err) {
-      console.error("Error handling upload:", err);
+      console.error("🔥 Submission error:", err);
       res.status(500).json({ error: "Server error: " + err.message });
     }
   }
 );
 
-// A simple endpoint for health checking the service
+// Health check
 app.get("/", (req, res) => {
   res.send("API is running.");
 });
 
-// Render requires that the app listens on process.env.PORT
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(\`🚀 Server is running on port \${PORT}\`);
 });
